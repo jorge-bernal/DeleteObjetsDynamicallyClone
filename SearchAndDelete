@@ -1,0 +1,38 @@
+/**
+ * This batch will delete all the records of a dynamically entity that are n days old. 
+ * @author: Jorge Bernal <jorge.bernal@geoalternativa.es>
+ * @date: 02/09/2020
+ */
+public with sharing class SearchAndDelete implements Database.Batchable<sObject>{
+    
+    public final String query;
+    public final String entity;
+	public final Integer daysToSave;
+    
+    public String queryBuilder(String entity, Integer daysToSave){
+        String query = 'SELECT Id\n';
+	query += 'FROM ' + entity + '\n';
+        query += 'WHERE CreatedDate < ' + Datetime.now().addDays(-daysToSave).formatGMT('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
+        System.debug(query);
+        return query;
+    }
+    
+    public GEO_SearchAndDelete(String entity, Integer daysToSave){
+        this.query = queryBuilder(entity, daysToSave);
+        this.entity = entity; 
+        this.daysToSave = daysToSave;
+        
+    }
+    
+    public Database.QueryLocator start(Database.BatchableContext bc){
+        return Database.getQueryLocator(query);
+    }
+    
+    public void execute(Database.BatchableContext bc, List<sObject> scope){
+        delete scope;
+    }
+    
+    public void finish(Database.BatchableContext bc){
+        System.debug('Finished');
+    }
+}
